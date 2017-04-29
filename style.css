@@ -1,0 +1,51 @@
+html, body {
+	padding: 0;
+	margin: 0;
+	height: 100%;
+	width: 100%;
+	font-family: sans-serif;
+	overflow:hidden;
+}
+
+#infoDiv {
+	width: 230px;
+	padding: 10px;
+	height: 100%;
+	background-color: #566270;
+	color: #f5f5f5;
+	float: left;
+	overflow-y: auto;
+}
+
+#mapDiv {
+	height: 100%;
+	width: calc(100% - 250px);
+	margin-left: 250px;
+	background-color: #c5d6d6;
+}
+
+.land {
+	fill: #f7f5e8;
+	stroke: #e2e1d7;
+}
+
+/*.dot {
+	fill: #D74733;
+}*/
+
+.hidden {
+	display: none;
+}
+
+#tooltip {
+	z-index: 100;
+	position: absolute;
+	text-align: left;
+	/*width: 60px;*/
+	/*height: 28px;*/
+	/*padding: 2px;*/
+	font: 12px sans-serif;
+	/*background: lightsteelblue;*/
+	border: 0px;
+	pointer-events: none;
+}

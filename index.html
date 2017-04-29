@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<title>Generalised Dot Maps</title>
+		<link rel="stylesheet" type="text/css" href="style.css">
+		<script src="https://d3js.org/d3.v4.min.js"></script>
+		<script src="https://d3js.org/topojson.v1.min.js"></script>
+		<script src="http://cdnjs.cloudflare.com/ajax/libs/mathjs/3.12.1/math.min.js"></script>
+	</head>
+<body>
+	
+<div id="infoDiv">
+	<h1>Generalised Dot Maps</h1>
+	<h3>Notes:</h3>
+	The grey box shows the bounding box, the dataset is filtered for dots inside this box so that calculations on the dots are only done on the visible ones.
+	<br>Currently, this simply plots all dots, which is why it is slow at small scales. When zooming in, there are fewer dots and it gets smoother.
+	<br>On zoom and/or pan, the underlying map is zoomed with svg zoom (faster than reprojecting). Then, the projection is updated and the dots are reprojected.
+	<h3>Statistics + Info:</h3>
+	Currently visible dots: <span id="infoDots"></span>
+	<br>Scale: <span id="infoScale"></span>
+
+</div>
+
+<div id="mapDiv">
+	<div id="tooltip" class="hidden"></div>
+</div>
+
+<script type="text/javascript" src="map.js"></script>
+
+</body>
+</html>
