@@ -1,26 +1,31 @@
+// get width and height
 var w = parseInt(d3.select("#mapDiv").style("width"))
 var h = parseInt(d3.select("#mapDiv").style("height"))
 
+// create svg
 var svg = d3.select("#mapDiv")
 	.append("svg")
 	.attr("width", w)
 	.attr("height", h);
 
+// initial scale and translation (makes mercator projection fit screen)
 scaleInit = h/(2*Math.PI) * (18/17)
 transInit = [w/2, h/2]
 
-// map
+// define projection
 var projection = d3.geoMercator()
 	.scale(scaleInit)
 	.translate(transInit)
 
+// define path generator
 var path = d3.geoPath()
 	.projection(projection);
 
+// g's for different parts of the map
 var mapG = svg.append("g")
 var dotG = svg.append("g")
 
-// world map
+// load world map geojson
 d3.json("world-110m.geojson", function(error, world) {
 	if (error) throw error;
 
@@ -30,26 +35,60 @@ d3.json("world-110m.geojson", function(error, world) {
 	.classed("land", true)
 })
 
-// dot dataset
+// load dataset for dots
 d3.csv("starbucks.csv", function(error, starbucks) {
 	if(error) throw error;
 
+	// initialise zoom
+	// has to be within recall of dataset because "zooming" function triggers reloading the dots
 	var zoom = d3.zoom()
-		.scaleExtent([1, 8])
 		.on("start", zoomStart)
 		.on("zoom", zooming)
 		.on("end", zoomEnd)
 
 	svg.call(zoom)
 
-	update()
+	function zoomStart() {
+		dotG.classed("hidden", true)
+		console.log("zoom started")
+	}
 
+	function zooming() {
+		// zoom map
+		mapG.style("stroke-width", 1.5 / d3.event.transform.k + "px");
+		mapG.attr("transform", d3.event.transform);
+	}
+
+	function zoomEnd() {
+
+		console.log("zoom ended")		
+		dotG.classed("hidden", false)
+
+		// update projection
+		projection
+		.translate([d3.event.transform.x + d3.event.transform.k*transInit[0], d3.event.transform.y + d3.event.transform.k*transInit[1]])
+		.scale(d3.event.transform.k * scaleInit)
+		
+		var t0 = performance.now()
+		// re-plot dots
+		update()
+
+		var t1 = performance.now()
+		console.log("Update took: " + (t1-t0))
+	}
+
+	// zoom is all set, next:
+	// functions to plot/update dots
+	
 	function update() {
 
 		// get new dot locations	
-		var dots = betterDots(starbucks, lat = "Latitude", lon = "Longitude", info = "Store Name")
+		var dots = betterDots(starbucks, 
+				      lat = "Latitude", 
+				      lon = "Longitude", 
+				      info = "Store Name")
 		
-		// update circles
+		// update circles with new dot collection
 		var circle = dotG
 			.selectAll(".dot")
 			.data(dots.instances)
@@ -79,110 +118,13 @@ d3.csv("starbucks.csv", function(error, starbucks) {
 			   .on("mouseout", function() {
 				d3.select("#tooltip").classed("hidden", true);
 			   })
-		
+
 		// update stats on the left
 		d3.select("#infoDots").text(dots.instances.length)
 		d3.select("#infoScale").text(projection.scale())
 
 	}
 
-	function zoomStart() {
-		dotG.classed("hidden", true)
-		console.log("zoom started")
-	}
-
-	function zooming() {
-		// zoom map
-		mapG.style("stroke-width", 1.5 / d3.event.transform.k + "px");
-		mapG.attr("transform", d3.event.transform);
-	}
-
-	function zoomEnd() {
-
-		console.log("zoom ended")		
-		dotG.classed("hidden", false)
-
-		// update projection
-		projection
-		.translate([d3.event.transform.x + d3.event.transform.k*transInit[0], d3.event.transform.y + d3.event.transform.k*transInit[1]])
-		.scale(d3.event.transform.k * scaleInit)
-		
-		// re-plot dots
-		update()
-	}
-
-
+	// initialise dots
+	update()
 })
-
-
-
-
-function betterDots(data, lat, lon, info, radius = 5) {
-
-	// create bounding box and filter
-	var bounds = getBoundingBox() //lrtb
-	
-	// filter for dots inside bounding box
-	var dataF = data.filter(function(inst){
-		return  inst[lon] > bounds.l &&
-			inst[lon] < bounds.r && 
-			inst[lat] < bounds.t &&
-			inst[lat] > bounds.b
-	})
-
-	var x = new Object()
-	x.radius = radius
-	x.value = 1
-	x.instances = []
-
-	for (var i = 0; i < dataF.length; i++) {
-		x.instances.push({coord: [dataF[i][lon], dataF[i][lat]], info: dataF[i][info], colour: "#D74733"})
-	}
-
-	return x
-}
-
-function getBoundingBox() {
-
-	// bounds of map outline
-	var mapBounds = mapG.node().getBBox()
-	var mapTrans = d3.zoomTransform(svg.node())
-
-	var l = mapTrans.x + mapBounds.x * mapTrans.k
-	var r = l + mapBounds.width * mapTrans.k
-	var t = mapTrans.y + mapBounds.y * mapTrans.k
-	var b = t + mapBounds.height * mapTrans.k
-
-	// compare to bounds of svg (visible part)
-	l = (l > 0 ? -180 : projection.invert([0, NaN])[0])
-	r = (r < w ? 180 : projection.invert([w, NaN])[0])
-	t = (t > 0 ? 85 : projection.invert([NaN, 0])[1])
-	b = (b < h ? -85 : projection.invert([NaN, h])[1])
-
-	console.log(l,r,t,b)
-
-	// compute lat + lon for pixel coordinates
-	var lrtb = {l: l, r: r, t: t, b: b}
-
-	// draw box (only for development purposes)
-	var box = dotG.selectAll("line")
-		.data([[[l,t],[r,t]], 
-			[[l,t],[l,b]],
-			[[l,b],[r,b]],
-			[[r,t],[r,b]]])
-
-	box.exit().remove()
-
-	box
-		.enter()
-		.append("line")
-		.merge(box)
-		.style("stroke", "grey")
-		.style("stroke-width", "2px")
-		.attr("x1", function(d) {return projection(d[0])[0]})
-		.attr("y1", function(d) {return projection(d[0])[1]})
-		.attr("x2", function(d) {return projection(d[1])[0]})
-		.attr("y2", function(d) {return projection(d[1])[1]})
-
-	return lrtb
-}
