@@ -17,12 +17,7 @@
 <div id="infoDiv">
 	<h1>Generalised Dot Maps</h1>
 	<h3>Notes</h3>
-	Currently, this simply plots all dots in the visible range, which is why it is slow at small scales. When zooming in, there are fewer dots and it gets smoother.
-	<br>On zoom and/or pan, the underlying map is zoomed with svg zoom (faster than reprojecting). Then, the projection is updated and the dots are reprojected.
-	<br>The dataset shows all Starbucks stores worldwide (<a href="https://www.kaggle.com/starbucks/store-locations">Source</a>).
-	<h3>Info</h3>
-	Currently visible dots: <span id="infoDots"></span>
-	<br>Scale: <span id="infoScale"></span>
+	On zoom and/or pan, the underlying map is zoomed with svg zoom (faster than reprojecting). Then, the projection is updated and used to display the updated point collection. The dataset used here is a list of all Starbucks stores worldwide (<a href="https://www.kaggle.com/starbucks/store-locations">Source</a>). I modified it to only contain unique locations (removing all stores whose location is already occupied by another store), since coincident locations (currently) lead to errors. 
 	<h3>Options</h3>
 	Updates on next zoom or pan. <br>
 	<input type="checkbox" id="showBounds"><label for="showBounds">Show bounding box</label><br>

@@ -27,6 +27,7 @@ this.getDots = function(data, lat = "lat", lon = "lon", info = "info", radius = 
 
 	if (x.value <= 1) {
 		console.log("Dot value is 1 or no points visible, returning original points")
+		console.log(x.originalPoints)
 		x.newDots = x.originalPoints
 	}
 
@@ -38,7 +39,6 @@ this.getDots = function(data, lat = "lat", lon = "lon", info = "info", radius = 
 
 		// sort dots into groups
 		x.groups = groupPoints(x.voronoi, x.value)
-		console.log(x.groups)
 
 		// for development: original dots coloured by their group
 		x.groupedDots = groupedDots(x.groups, x.voronoi)

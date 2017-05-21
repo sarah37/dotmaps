@@ -133,6 +133,7 @@ d3.csv("starbucks_unique.csv", function(error, dotdata) {
 				.attr("cy", function(d) {return d.pos[1]})
 				.attr("r", function() {return dots.radius})
 				.style("fill", function(d) {return d.colour})
+				.style("opacity", 0.6)
 		}
 
 		else {
