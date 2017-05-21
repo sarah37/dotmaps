@@ -11,7 +11,6 @@ html, body {
 	width: 230px;
 	padding: 10px;
 	height: 100%;
-	/*border-right: 2px dotted #555;*/
 	background-color: #c5d6d6;
 	color: #555;
 	float: left;
@@ -29,10 +28,6 @@ html, body {
 	fill: #f7f5e8;
 	stroke: #e2e1d7;
 }
-
-/*.dot {
-	fill: #D74733;
-}*/
 
 .hidden {
 	display: none;

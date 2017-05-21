@@ -1,3 +1,5 @@
+// three functions to draw some stuff that helps visualise how the algorithm works
+
 function drawBounds(b) {
 
 	var box = devG.selectAll(".bbox")

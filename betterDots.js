@@ -1,3 +1,5 @@
+// this file is where everything interesting happens! 
+
 // naming requirements
 // svg element has to be called svg
 // map has to be in a g element called mapG
@@ -53,8 +55,7 @@ this.getDots = function(data, lat = "lat", lon = "lon", info = "info", radius = 
 }
 
 function getBoundingBox() {
-	// computes bounding box of currently visible part of the map
-	// refers to: mapG
+	// computes bounding box of currently visible part of the map in terms of lat/lon
 
 	var mapBounds = mapG.node().getBBox()
 	var mapTrans = d3.zoomTransform(svg.node())
@@ -74,8 +75,8 @@ function getBoundingBox() {
 }
 
 function pointsInBounds(data, bounds, lat, lon, info) {
+	// returns a filtered version of the dataset, only containing the points within the bounding box
 
-	// filter for dots inside bounding box
 	var filtered = data.filter(function(inst){
 		return  inst[lon] > bounds.l &&
 			inst[lon] < bounds.r && 
@@ -83,7 +84,7 @@ function pointsInBounds(data, bounds, lat, lon, info) {
 			inst[lat] > bounds.b
 	})
 	
-	// original points within bounding box
+	// tidy version
 	points = []
 	for (var i = 0; i < filtered.length; i++) {
 		points.push({id: i, pos: projection([filtered[i][lon], filtered[i][lat]]), info: filtered[i][info]})
@@ -93,6 +94,7 @@ function pointsInBounds(data, bounds, lat, lon, info) {
 }
 
 function getDotValue(dots, cellSize) {
+	// overlays a grid, counts number of points in each cell and computes dot value based on that
 
 	var w = svg.attr("width"),
 	    h = svg.attr("height")
@@ -116,6 +118,8 @@ function getDotValue(dots, cellSize) {
 }
 
 function extendedVoronoi(points) {
+	// computes a voronoi diagram and the related delaunay triangulation for a point collection
+	// the returned object has several additional properties compared to the standard d3 one
 
 	// define d3 voronoi
 	var voronoi = d3.voronoi()
@@ -149,7 +153,8 @@ function extendedVoronoi(points) {
 }
 
 function groupPoints(diagram, groupsize) {
-	// groupsize >= 2
+	// computes equally sized groups of spatially close points based on the extended voronoi diagram
+	// requires groupsize >= 2
 
 	var groups = []
 	var n = Math.ceil(diagram.cells.length / groupsize) - 1 // last group is always excluded, even if the remainder is 0
@@ -262,11 +267,11 @@ function getNeighbours(diagram, points, exclude = [], filterQuantile = false) {
 }
 
 function getNewStartingPoint(group, diagram) {
+	// finds a closeby point to continue from in case a group doesn't have any direct neighbours anymore
 
 	var newPoint = -1
 	var current = group.slice()
 	var previous = []
-	var checked = group.slice()
 
 	// center of mass of group; to pick point as close as possible
 	var com = centerOfMass(diagram, group)
@@ -276,12 +281,9 @@ function getNewStartingPoint(group, diagram) {
 		// get neighbours of current selection, excluding all that were part of the previous selection
 		var candidates = getNeighbours(diagram, current, previous)
 
-		checked = checked.concat(candidates)
-
 		// this happens if there are duplicate locations in the dataset (but should not otherwise)
 		if (candidates.length == 0) {
-			console.log("I'm stuckity stuck!")
-			console.log(checked)
+			console.log("I'm stuck!")
 			console.log(candidates)
 			console.log(current)
 			console.log(previous)
@@ -299,14 +301,15 @@ function getNewStartingPoint(group, diagram) {
 			}
 		})
 
-		previous = [].concat(current) // new previous is old current
-		current = [].concat(candidates) // new current are this round's candidates
+		previous = current.slice() // new previous is old current
+		current = candidates.slice() // new current are this round's candidates
 	}
 
 	return newPoint
 }
 
 function finalDots(groups, diagram) {
+	// creates a list of point locations based on the groups
 	
 	var newDots = []
 	
@@ -320,8 +323,8 @@ function finalDots(groups, diagram) {
 }
 
 function groupedDots(groups, diagram) {
-
 	// for development: returns the original points, coloured randomly by group membership
+
 	var groupedDots = []
 
 	groups.forEach(function(members, index) {
@@ -336,18 +339,23 @@ function groupedDots(groups, diagram) {
 }
 
 function centerOfMass(diagram, group) {
+	// centre of mass of a point collection
+
 	var sumX = 0
 	var sumY = 0
+	
 	group.forEach(function(member) {
 		sumX += diagram.cells[member].site[0]
 		sumY += diagram.cells[member].site[1]
 	})
+	
 	var com = [(sumX / group.length), (sumY / group.length)]
+	
 	return com
 }
 
-// HELPER FUNCTIONS
 function zeros(rows, cols) {
+	// helper function: creates nested array of zeros
 	var array = [], row = [];
 	while (cols--) row.push(0);
 	while (rows--) array.push(row.slice());

@@ -1,3 +1,6 @@
+// This whole file is mostly for the map, zoom functionality etc. 
+// The interesting part happens in betterDots.js
+
 d3.select("#showDelaunay").on("change", function() {
 	if (!d3.select("#showDelaunay").property("checked")) {
 		d3.selectAll(".delaunay").remove()
