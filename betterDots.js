@@ -29,7 +29,6 @@ this.getDots = function(data, lat = "lat", lon = "lon", info = "info", radius = 
 
 	if (x.value <= 1) {
 		console.log("Dot value is 1 or no points visible, returning original points")
-		console.log(x.originalPoints)
 		x.newDots = x.originalPoints
 	}
 
@@ -37,7 +36,6 @@ this.getDots = function(data, lat = "lat", lon = "lon", info = "info", radius = 
 		console.log("Dot value > 1, calculating aggregated dots")
 		// compute voronoi diagram with some extensions
 		x.voronoi = extendedVoronoi(x.originalPoints)
-		console.log(x.voronoi)
 
 		// sort dots into groups
 		x.groups = groupPoints(x.voronoi, x.value)
@@ -48,7 +46,6 @@ this.getDots = function(data, lat = "lat", lon = "lon", info = "info", radius = 
 		// create final list of dots by representing each group with one dot
 		// currently these are only coloured by group membership! 
 		x.newDots = finalDots(x.groups, x.voronoi)
-		console.log(x.newDots)
 	}
 
 	return x
