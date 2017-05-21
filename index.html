@@ -6,20 +6,29 @@
 		<link rel="stylesheet" type="text/css" href="style.css">
 		<script src="https://d3js.org/d3.v4.min.js"></script>
 		<script src="https://d3js.org/topojson.v1.min.js"></script>
-		<script type="text/javascript" src="betterDots.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/3.13.1/math.min.js"></script>
+<!-- 		<script src="lib/d3.v4.min.js"></script>
+		<script src="lib/topojson.v1.min.js"></script>
+ -->		<script type="text/javascript" src="betterDots.js"></script>
+		<script type="text/javascript" src="devtools.js"></script>
 	</head>
 <body>
 	
 <div id="infoDiv">
 	<h1>Generalised Dot Maps</h1>
-	<h3>Notes:</h3>
+	<h3>Notes</h3>
 	Currently, this simply plots all dots in the visible range, which is why it is slow at small scales. When zooming in, there are fewer dots and it gets smoother.
 	<br>On zoom and/or pan, the underlying map is zoomed with svg zoom (faster than reprojecting). Then, the projection is updated and the dots are reprojected.
 	<br>The dataset shows all Starbucks stores worldwide (<a href="https://www.kaggle.com/starbucks/store-locations">Source</a>).
-	<h3>Info:</h3>
+	<h3>Info</h3>
 	Currently visible dots: <span id="infoDots"></span>
 	<br>Scale: <span id="infoScale"></span>
-
+	<h3>Options</h3>
+	Updates on next zoom or pan. <br>
+	<input type="checkbox" id="showBounds"><label for="showBounds">Show bounding box</label><br>
+	<input type="checkbox" id="showGrid"><label for="showGrid">Show grid (used for dot value calculation)</label><br>
+	<input type="checkbox" id="showDelaunay"><label for="showDelaunay">Show Delaunay triangulation</label>
+	<input type="checkbox" id="showGroups"><label for="showGroups">Show original dots coloured by group membership instead of new dots</label>
 
 </div>
 

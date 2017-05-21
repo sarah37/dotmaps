@@ -1,6 +1,27 @@
+d3.select("#showDelaunay").on("change", function() {
+	if (!d3.select("#showDelaunay").property("checked")) {
+		d3.selectAll(".delaunay").remove()
+	}
+})
+
+d3.select("#showBounds").on("change", function() {
+	if (!d3.select("#showBounds").property("checked")) {
+		d3.selectAll(".bbox").remove()
+	}
+})
+
+d3.select("#showGrid").on("change", function() {
+	if (!d3.select("#showGrid").property("checked")) {
+		d3.selectAll(".xLine, .yLine").remove()
+	}
+})
+
 // get width and height
 var w = parseInt(d3.select("#mapDiv").style("width"))
 var h = parseInt(d3.select("#mapDiv").style("height"))
+
+// colour
+var circleColour = "#D94726";
 
 // create svg
 var svg = d3.select("#mapDiv")
@@ -24,6 +45,8 @@ var path = d3.geoPath()
 // g's for different parts of the map
 var mapG = svg.append("g")
 var dotG = svg.append("g")
+var devG = svg.append("g")
+
 
 // load world map geojson
 d3.json("world-110m.geojson", function(error, world) {
@@ -36,7 +59,7 @@ d3.json("world-110m.geojson", function(error, world) {
 })
 
 // load dataset for dots
-d3.csv("starbucks.csv", function(error, starbucks) {
+d3.csv("starbucks_unique.csv", function(error, dotdata) {
 	if(error) throw error;
 
 	// initialise zoom
@@ -50,7 +73,7 @@ d3.csv("starbucks.csv", function(error, starbucks) {
 
 	function zoomStart() {
 		dotG.classed("hidden", true)
-		console.log("zoom started")
+		devG.classed("hidden", true)
 	}
 
 	function zooming() {
@@ -60,21 +83,21 @@ d3.csv("starbucks.csv", function(error, starbucks) {
 	}
 
 	function zoomEnd() {
-
-		console.log("zoom ended")		
+		
 		dotG.classed("hidden", false)
+		devG.classed("hidden", false)
 
 		// update projection
 		projection
 		.translate([d3.event.transform.x + d3.event.transform.k*transInit[0], d3.event.transform.y + d3.event.transform.k*transInit[1]])
 		.scale(d3.event.transform.k * scaleInit)
-		
+
 		var t0 = performance.now()
 		// re-plot dots
 		update()
 
 		var t1 = performance.now()
-		console.log("Update took: " + (t1-t0))
+		console.log("Update took: " + Math.floor(t1-t0) + "ms")
 	}
 
 	// zoom is all set, next:
@@ -83,29 +106,55 @@ d3.csv("starbucks.csv", function(error, starbucks) {
 	function update() {
 
 		// get new dot locations	
-		var dots = betterDots(starbucks, 
-				      lat = "Latitude", 
-				      lon = "Longitude", 
-				      info = "Store Name")
-		
+		var dots = betterDots.getDots(dotdata,
+					lat = "Latitude", 
+					lon = "Longitude", 
+					info = "Store Name") 
+
+				// for meatvis dataset
+				      // lat = "lat", 
+				      // lon = "lon", 
+				      // info = "location")
+
 		// update circles with new dot collection
-		var circle = dotG
-			.selectAll(".dot")
-			.data(dots.instances)
+		if (d3.select("#showGroups").property("checked")) {
+			var circle = dotG
+				.selectAll(".dot")
+				.data(dots.groupedDots)
 
-		circle.exit().remove()
+			circle.exit().remove()
 
-		circle
-			.enter()
-			.append("circle")
-			.classed("dot", true)
-			.merge(circle)
-			.attr("cx", function(d) {return projection(d.coord)[0]})
-			.attr("cy", function(d) {return projection(d.coord)[1]})
-			.attr("r", function() {return dots.radius})
-			.style("fill", function(d) {return d.colour})
+			circle
+				.enter()
+				.append("circle")
+				.classed("dot", true)
+				.merge(circle)
+				.attr("cx", function(d) {return d.pos[0]})
+				.attr("cy", function(d) {return d.pos[1]})
+				.attr("r", function() {return dots.radius})
+				.style("fill", function(d) {return d.colour})
+		}
+
+		else {
+			var circle = dotG
+				.selectAll(".dot")
+				.data(dots.newDots)
+
+			circle.exit().remove()
+
+			circle
+				.enter()
+				.append("circle")
+				.classed("dot", true)
+				.merge(circle)
+				.attr("cx", function(d) {return d.pos[0]})
+				.attr("cy", function(d) {return d.pos[1]})
+				.attr("r", function() {return dots.radius})
+				.style("fill", circleColour)	
+		}
 			
 			// tooltips
+			circle
 			 .on("mouseover", function(d) {
 				var x = parseFloat(d3.select(this).attr("cx"))
 				var y = parseFloat(d3.select(this).attr("cy"));
@@ -120,8 +169,13 @@ d3.csv("starbucks.csv", function(error, starbucks) {
 			   })
 
 		// update stats on the left
-		d3.select("#infoDots").text(dots.instances.length)
+		d3.select("#infoDots").text(dots.originalPoints.length)
 		d3.select("#infoScale").text(projection.scale())
+
+		// dev help
+		if (d3.select("#showBounds").property("checked")) drawBounds(dots.bounds);
+		if (d3.select("#showGrid").property("checked")) drawGrid(dots.grid.x, dots.grid.y);
+		if (d3.select("#showDelaunay").property("checked")) drawDelaunay(dots.voronoi.links());
 
 	}
 
