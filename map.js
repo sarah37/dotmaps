@@ -154,7 +154,8 @@ d3.csv("starbucks_unique.csv", function(error, dotdata) {
 				.attr("cx", function(d) {return d.pos[0]})
 				.attr("cy", function(d) {return d.pos[1]})
 				.attr("r", function() {return dots.radius})
-				.style("fill", circleColour)	
+				.style("fill", circleColour)
+				.style("opacity", 1)	
 		}
 			
 			// tooltips
