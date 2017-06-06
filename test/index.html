@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<title>Generalised Dot Maps</title>
+		<link rel="stylesheet" href="../style.css">
+		<link rel="stylesheet" href="extra.css">
+		<script src="https://d3js.org/d3.v4.min.js"></script>
+		<script src="https://d3js.org/topojson.v1.min.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/3.13.1/math.min.js"></script>
+		<script src="betterDots.js"></script>
+		<script src="devtools.js"></script>
+	</head>
+<body>
+	
+<div id="infoDiv">
+	<h1>Generalised Dot Maps</h1>
+	<h3>Notes</h3>
+	On zoom and/or pan, the underlying map is zoomed with svg zoom (faster than reprojecting). Then, the projection is updated and used to display the updated point collection. The dataset used here is a list of all Starbucks stores worldwide (<a href="https://www.kaggle.com/starbucks/store-locations">Source</a>). I modified it to only contain unique locations (removing all stores whose location is already occupied by another store), since coincident locations lead to errors, as the Delaunay triangulation cannot deal with them. The options below slow down everything quite a bit, but give some insight into how the algorithm works. A (faster) version without all of these options can be found <a href="https://sarah37.github.io/dotmaps/">here</a>. 
+	<h3>Dot value: <span id="dotvalue"></span></h3>
+	<h3>Options</h3>
+	Updates on next zoom or pan. Also open up a console to see some additional stats on each update.<br>
+	<input type="checkbox" id="showBounds"><label for="showBounds">Show bounding box</label><br>
+	<input type="checkbox" id="showGrid"><label for="showGrid">Show grid (used for dot value calculation)</label><br>
+	<input type="checkbox" id="showDelaunay"><label for="showDelaunay">Show Delaunay triangulation</label>
+	<input type="checkbox" id="showGroups"><label for="showGroups">Show original dots coloured by group membership instead of new dots</label>
+</div>
+
+<div id="mapDiv">
+	<div id="tooltip" class="hidden"></div>
+</div>
+
+<script type="text/javascript" src="map.js"></script>
+
+</body>
+</html>

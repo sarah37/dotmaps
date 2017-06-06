@@ -1,12 +1,9 @@
-// in this version, I commented out a lot of the code that is used to log
-// some stats and display extra stuff
-
 // namespace betterDots
 var betterDots = new function() {
 
 // the only exposed function here 
 this.getDots = function(data, info, func) {
-	// var t0 = performance.now()
+	var t0 = performance.now()
 
 	// create output object
 	var x = new Object()
@@ -17,7 +14,7 @@ this.getDots = function(data, info, func) {
 	// filter for visible dots to speed up following calculations
 	x.originalPoints = pointsInBounds(data, x.bounds, info.lat, info.lon, info.info)
 
-	// var t1 = performance.now()
+	var t1 = performance.now()
 	// dot size
 	x.radius = info.radius
 
@@ -26,36 +23,36 @@ this.getDots = function(data, info, func) {
 	x.value = dotVal.dotValue
 	x.grid = {x: dotVal.xSteps, y: dotVal.ySteps}
 
-	// var t2 = performance.now()
+	var t2 = performance.now()
 
 	if (x.value <= 1) {
-		// console.log("Dot value is 1 or no points visible, returning original points")
+		console.log("Dot value is 1 or no points visible, returning original points")
 		x.newDots = x.originalPoints
 	}
 
 	else {
-		// console.log("Dot value > 1, calculating aggregated dots")
+		console.log("Dot value > 1, calculating aggregated dots")
 		// compute voronoi diagram with some extensions
 		x.voronoi = extendedVoronoi(x.originalPoints)
 		
-		// var t3 = performance.now()
+		var t3 = performance.now()
 
 		// sort dots into groups
 		x.groups = groupPoints(x.voronoi, x.value)
 
-		// var t4 = performance.now()
+		var t4 = performance.now()
 
 		// for development: original dots coloured by their group
-		// x.groupedDots = groupedDots(x.groups, x.voronoi)
+		x.groupedDots = groupedDots(x.groups, x.voronoi)
 
 		// create final list of dots by representing each group with one dot
 		x.newDots = finalDots(x.groups, x.voronoi)
 	}
 
-	// var t5 = performance.now()
+	var t5 = performance.now()
 
 	// for performance measurements
-	// console.log(t0,t1,t2,t3,t4,t5, x.value,x.originalPoints.length)
+	console.log(t0,t1,t2,t3,t4,t5, x.value,x.originalPoints.length)
 
 	return x
 }
@@ -148,9 +145,9 @@ function groupPoints(diagram, groupsize) {
 	var groups = []
 	var n = Math.ceil(diagram.cells.length / groupsize) - 1 // last group is always excluded, even if the remainder is 0
 	
-	// console.log("Number of points: " + diagram.cells.length)
-	// console.log("Number of groups: " + (n+1))
-	// console.log("Group size: " + groupsize)
+	console.log("Number of points: " + diagram.cells.length)
+	console.log("Number of groups: " + (n+1))
+	console.log("Group size: " + groupsize)
 
 	// pick first point as starting point
 	var startingPoint = 0
@@ -320,21 +317,21 @@ function finalDots(groups, diagram) {
 	return newDots
 }
 
-// function groupedDots(groups, diagram) {
-// 	// for development: returns the original points, coloured randomly by group membership
+function groupedDots(groups, diagram) {
+	// for development: returns the original points, coloured randomly by group membership
 
-// 	var groupedDots = []
+	var groupedDots = []
 
-// 	groups.forEach(function(members, index) {
-// 		var groupcolour = d3.hsl(Math.floor(360 * Math.random()), 0.7, 0.5) // random colour
-// 		members.forEach(function(member) {
-// 			groupedDots.push({id: member, pos: diagram.cells[member].site, info:index , colour: groupcolour})
-// 			// info: diagram.cells[member].site.data.info
-// 		})
-// 	})
+	groups.forEach(function(members, index) {
+		var groupcolour = d3.hsl(Math.floor(360 * Math.random()), 0.7, 0.5) // random colour
+		members.forEach(function(member) {
+			groupedDots.push({id: member, pos: diagram.cells[member].site, info:index , colour: groupcolour})
+			// info: diagram.cells[member].site.data.info
+		})
+	})
 
-// 	return groupedDots
-// }
+	return groupedDots
+}
 
 function centerOfMass(diagram, group) {
 	// centre of mass of a point collection

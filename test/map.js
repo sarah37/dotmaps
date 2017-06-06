@@ -1,3 +1,24 @@
+// This whole file is mostly for the map, zoom functionality etc. 
+// The interesting part happens in betterDots.js
+
+d3.select("#showDelaunay").on("change", function() {
+	if (!d3.select("#showDelaunay").property("checked")) {
+		d3.selectAll(".delaunay").remove()
+	}
+})
+
+d3.select("#showBounds").on("change", function() {
+	if (!d3.select("#showBounds").property("checked")) {
+		d3.selectAll(".bbox").remove()
+	}
+})
+
+d3.select("#showGrid").on("change", function() {
+	if (!d3.select("#showGrid").property("checked")) {
+		d3.selectAll(".xLine, .yLine").remove()
+	}
+})
+
 // get width and height
 var w = parseInt(d3.select("#mapDiv").style("width"))
 var h = parseInt(d3.select("#mapDiv").style("height"))
@@ -27,9 +48,11 @@ var path = d3.geoPath()
 // g's for different parts of the map
 var mapG = svg.append("g")
 var dotG = svg.append("g")
+var devG = svg.append("g")
+
 
 // load world map geojson
-d3.json("world-110m.geojson", function(error, world) {
+d3.json("../world-110m.geojson", function(error, world) {
 	if (error) throw error;
 
 	mapG
@@ -39,7 +62,7 @@ d3.json("world-110m.geojson", function(error, world) {
 })
 
 // load dataset for dots
-d3.csv("starbucks_unique.csv", function(error, dotdata) {
+d3.csv("../starbucks_unique.csv", function(error, dotdata) {
 	if(error) throw error;
 
 	// initialise zoom
@@ -53,6 +76,7 @@ d3.csv("starbucks_unique.csv", function(error, dotdata) {
 
 	function zoomStart() {
 		dotG.classed("hidden", true)
+		devG.classed("hidden", true)
 	}
 
 	function zooming() {
@@ -64,6 +88,7 @@ d3.csv("starbucks_unique.csv", function(error, dotdata) {
 	function zoomEnd() {
 		
 		dotG.classed("hidden", false)
+		devG.classed("hidden", false)
 
 		// update projection
 		projection
@@ -79,6 +104,9 @@ d3.csv("starbucks_unique.csv", function(error, dotdata) {
 	
 	function update() {
 
+		// measure time to update
+		var t0 = performance.now()
+		
 		// get new dot locations	
 		var dots = betterDots.getDots(dotdata, info = {
 			lat: "Latitude", 
@@ -92,41 +120,72 @@ d3.csv("starbucks_unique.csv", function(error, dotdata) {
 			height: function() {return parseInt(d3.select("#mapDiv").style("height"))}
 		})
 
+		var t1 = performance.now()
+		console.log("Update took: " + Math.floor(t1-t0) + "ms")
+		console.log(dots)
+
 		// update circles with new dot collection
-		var circle = dotG
-			.selectAll(".dot")
-			.data(dots.newDots)
+		if (d3.select("#showGroups").property("checked")) {
+			var circle = dotG
+				.selectAll(".dot")
+				.data(dots.groupedDots)
 
-		circle.exit().remove()
+			circle.exit().remove()
 
-		circle
-			.enter()
-			.append("circle")
-			.classed("dot", true)
-			.merge(circle)
-			.attr("cx", function(d) {return d.pos[0]})
-			.attr("cy", function(d) {return d.pos[1]})
-			.attr("r", function() {return dots.radius})
-			.style("fill", circleColour)
-			.style("opacity", 1)	
-		
-		// tooltips
-		circle
-		 .on("mouseover", function(d) {
-			var x = parseFloat(d3.select(this).attr("cx"))
-			var y = parseFloat(d3.select(this).attr("cy"));
-			d3.select("#tooltip")
-				.style("left", x + 260 + "px")
-				.style("top", y - 6 + "px")
-				.text(d.info);
-			d3.select("#tooltip").classed("hidden", false);
-		   })
-		   .on("mouseout", function() {
-			d3.select("#tooltip").classed("hidden", true);
-		   })
+			circle
+				.enter()
+				.append("circle")
+				.classed("dot", true)
+				.merge(circle)
+				.attr("cx", function(d) {return d.pos[0]})
+				.attr("cy", function(d) {return d.pos[1]})
+				.attr("r", function() {return dots.radius})
+				.style("fill", function(d) {return d.colour})
+				.style("opacity", .6)
+		}
+
+		else {
+			var circle = dotG
+				.selectAll(".dot")
+				.data(dots.newDots)
+
+			circle.exit().remove()
+
+			circle
+				.enter()
+				.append("circle")
+				.classed("dot", true)
+				.merge(circle)
+				.attr("cx", function(d) {return d.pos[0]})
+				.attr("cy", function(d) {return d.pos[1]})
+				.attr("r", function() {return dots.radius})
+				.style("fill", circleColour)
+				.style("opacity", 1)	
+		}
+			
+			// tooltips
+			circle
+			 .on("mouseover", function(d) {
+				var x = parseFloat(d3.select(this).attr("cx"))
+				var y = parseFloat(d3.select(this).attr("cy"));
+				d3.select("#tooltip")
+					.style("left", x + 260 + "px")
+					.style("top", y - 6 + "px")
+					.text(d.info);
+				d3.select("#tooltip").classed("hidden", false);
+			   })
+			   .on("mouseout", function() {
+				d3.select("#tooltip").classed("hidden", true);
+			   })
 
 		// update stats on the left
 		d3.select("#dotvalue").text(dots.value)
+
+		// dev help
+		if (d3.select("#showBounds").property("checked")) drawBounds(dots.bounds);
+		if (d3.select("#showGrid").property("checked")) drawGrid(dots.grid.x, dots.grid.y);
+		if (d3.select("#showDelaunay").property("checked")) drawDelaunay(dots.voronoi.links());
+
 	}
 
 	// initialise dots
